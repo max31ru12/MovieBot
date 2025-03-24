@@ -9,7 +9,7 @@ from alembic import context
 
 from app.config import DB_URL
 from app.database.db_config import Base
-from app.database.models import Movie
+from app.database.models import Movie  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
