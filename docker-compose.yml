@@ -1,11 +1,11 @@
 services:
   database:
-    container_name: database
-    image: postgres
+    container_name: bot_database
+    image: postgres:alpine
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER:-test}
+      - POSTGRES_DB=${DB_NAME:-test}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-test}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
