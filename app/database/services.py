@@ -40,3 +40,14 @@ async def add_movie_to_db(code: int, name: str):
         movie = Movie(code=code, name=name)
         session.add(movie)
         await session.commit()
+
+
+
+async def add_user_to_db():
+    pass
+    # async with session_factory() as session:
+    #     user = User(
+    #         tg_user_id=message.from_user.id, tg_username=message.from_user.username
+    #     )
+    #     session.add(user)
+    #     await session.commit()

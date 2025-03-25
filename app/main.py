@@ -5,8 +5,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
 from app.config import TOKEN
-from app.database.db_config import session_factory
-from app.database.models import User
+from app.keyboards.admin_keyboard import admin_start_keyboard
 from app.routers.admin_router import router as admin_router
 
 
@@ -25,14 +24,9 @@ async def main():
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    async with session_factory() as session:
-        user = User(
-            tg_user_id=message.from_user.id, tg_username=message.from_user.username
-        )
-        session.add(user)
-        await session.commit()
+
     await message.answer(
-        "Для получения названия фильма подпишитесь на канал 1 и канал 2"
+        "Для получения названия фильма подпишитесь на канал 1 и канал 2", reply_markup=admin_start_keyboard
     )
 
 
