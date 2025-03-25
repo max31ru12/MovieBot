@@ -1,5 +1,8 @@
 from aiogram import Bot
 from aiogram.enums import ChatMemberStatus
+from aiogram.types import Message
+
+from app.database.services import check_user_is_admin_db
 
 
 async def check_subscription(bot: Bot, user_id: int, channel: int | str) -> bool:
@@ -14,10 +17,11 @@ async def check_subscription(bot: Bot, user_id: int, channel: int | str) -> bool
         return False
 
 
-async def check_user_is_admin(bot: Bot, user_id: int, channel: int | str) -> bool:
+async def check_user_is_admin(bot: Bot, message: Message, channel: int | str) -> bool:
     try:
-        member = await bot.get_chat_member(channel, user_id)
-        return member.status in {ChatMemberStatus.ADMINISTRATOR}
+        member = await bot.get_chat_member(channel, message.from_user.id)
+        is_admin_db = await check_user_is_admin_db(message.from_user.username)
+        return member.status in {ChatMemberStatus.ADMINISTRATOR} or is_admin_db
     except Exception as e:
         print(f"Ошибка при проверке пользователя в качестве администратора: {e}")
         return False

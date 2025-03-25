@@ -39,7 +39,7 @@ async def command_start_handler(message: Message) -> None:
 @dp.message(Command("chat_info"))
 async def show_chat_info(message: Message, bot: Bot):
     chat = message.chat
-    await message.answer(f"ID чата: {chat.id}\nНазвание: {chat.title}")
+    await message.answer(f"ID чата: {chat.id}\nНазвание: {chat.title} {message.from_user.id}")
 
 
 if __name__ == "__main__":
