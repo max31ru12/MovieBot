@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
+from app.database.services import add_movie_to_db, CodeAlreadyExistsError, NameAlreadyExistsError, check_movie_exists
 from app.utils import check_user_is_admin, check_user_is_creator
 
 router = Router()
@@ -35,9 +36,14 @@ async def process_movie_code(message: Message, state: FSMContext):
 
     code = int(message.text)
 
-    await state.update_data(movie_code=code)
-    await message.answer("Хорошо. Теперь введите название фильма:")
-    await state.set_state(AddMovieState.waiting_for_name)
+    try:
+        await check_movie_exists(code=code)
+        await state.update_data(movie_code=code)
+        await message.answer("Хорошо. Теперь введите название фильма:")
+        await state.set_state(AddMovieState.waiting_for_name)
+        return
+    except CodeAlreadyExistsError:
+        await message.answer("Фильм с таким кодом уже существует")
 
 
 @router.message(AddMovieState.waiting_for_name)
@@ -53,6 +59,11 @@ async def process_movie_name(message: Message, state: FSMContext):
     data = await state.get_data()
     code = data.get("movie_code")
 
-    await add_movie(code, name)
-    await message.answer(f"✅ Фильм добавлен: <b>{code}</b> – {name}")
-    await state.clear()
+    try:
+        await check_movie_exists(name=name)
+        await add_movie_to_db(code, name)
+        await message.answer(f"✅ Фильм добавлен: <b>{code}</b> – {name}")
+        await state.clear()
+    except NameAlreadyExistsError:
+        await message.answer("Фильм с таким именем уже существует")
+        return
