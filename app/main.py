@@ -24,16 +24,18 @@ async def main():
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-
     await message.answer(
-        "Для получения названия фильма подпишитесь на канал 1 и канал 2", reply_markup=admin_start_keyboard
+        "Для получения названия фильма подпишитесь на канал 1 и канал 3",
+        reply_markup=admin_start_keyboard,
     )
 
 
 @dp.message(Command("chat_info"))
 async def show_chat_info(message: Message, bot: Bot):
     chat = message.chat
-    await message.answer(f"ID чата: {chat.id}\nНазвание: {chat.title} {message.from_user.id}")
+    await message.answer(
+        f"ID чата: {chat.id}\nНазвание: {chat.title} {message.from_user.id}"
+    )
 
 
 if __name__ == "__main__":
