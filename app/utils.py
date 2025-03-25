@@ -17,9 +17,7 @@ async def check_subscription(bot: Bot, user_id: int, channel: int | str) -> bool
 async def check_user_is_admin(bot: Bot, user_id: int, channel: int | str) -> bool:
     try:
         member = await bot.get_chat_member(channel, user_id)
-        return member.status in {
-            ChatMemberStatus.ADMINISTRATOR
-        }
+        return member.status in {ChatMemberStatus.ADMINISTRATOR}
     except Exception as e:
         print(f"Ошибка при проверке пользователя в качестве администратора: {e}")
         return False
@@ -28,9 +26,7 @@ async def check_user_is_admin(bot: Bot, user_id: int, channel: int | str) -> boo
 async def check_user_is_creator(bot: Bot, user_id: int, channel: int | str) -> bool:
     try:
         member = await bot.get_chat_member(channel, user_id)
-        return member.status in {
-            ChatMemberStatus.CREATOR
-        }
+        return member.status in {ChatMemberStatus.CREATOR}
     except Exception as e:
         print(f"Ошибка при проверке пользователя в качестве создателя: {e}")
         return False

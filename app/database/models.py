@@ -5,7 +5,6 @@ from app.database.db_config import Base
 
 
 class Movie(Base):
-
     __tablename__ = "movies"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -14,7 +13,6 @@ class Movie(Base):
 
 
 class User(Base):
-
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

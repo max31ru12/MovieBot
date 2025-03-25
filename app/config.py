@@ -7,7 +7,7 @@ load_dotenv()
 
 TOKEN = getenv("TOKEN")
 
-DB_HOST = getenv("DB_HOST", default="database")
+DB_HOST = getenv("DB_HOST", default="localhost")
 DB_PORT = getenv("DB_PORT", default=5432)
 DB_NAME = getenv("DB_NAME")
 DB_USER = getenv("DB_USER")
