@@ -4,18 +4,18 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
-from app.config import TOKEN
+from app.config import bot
+from app.database.services import get_user_by_kwargs, add_user_to_db
 from app.keyboards.admin_keyboard import admin_start_keyboard
+from app.keyboards.user_keyboard import user_menu
 from app.routers.admin_router import router as admin_router
-
+from app.routers.user_router import router as user_router
 
 dp = Dispatcher()
 
 
 dp.include_router(admin_router)
-
-
-bot = Bot(token=TOKEN)
+dp.include_router(user_router)
 
 
 async def main():
@@ -24,9 +24,18 @@ async def main():
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
+    username = message.from_user.username
+    user_id = message.from_user.id
+    user_db = await get_user_by_kwargs(tg_username=username)
+
+    if user_db is None:
+        await add_user_to_db(user_id, username)
+
+    keyboard = admin_start_keyboard if user_db.is_admin else user_menu
+
     await message.answer(
         "Для получения названия фильма подпишитесь на канал 1 и канал 3",
-        reply_markup=admin_start_keyboard,
+        reply_markup=keyboard,
     )
 
 

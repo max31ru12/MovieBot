@@ -1,10 +1,15 @@
 from aiogram import Router, Bot, F
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from app.database.services import add_movie_to_db, CodeAlreadyExistsError, NameAlreadyExistsError, check_movie_exists
+from app.database.services import (
+    add_movie_to_db,
+    CodeAlreadyExistsError,
+    NameAlreadyExistsError,
+    check_movie_exists,
+    get_last_movie,
+)
 from app.keyboards.admin_keyboard import adding_film_adding_keyboard
 from app.utils import check_user_is_admin, check_user_is_creator
 
@@ -19,11 +24,14 @@ class AddMovieState(StatesGroup):
 
 @router.message(F.text == "📥 Добавить фильм")
 async def add_movie(message: Message, bot: Bot, state: FSMContext):
-    is_admin = (await check_user_is_admin(bot, message, message.chat.id))
+    is_admin = await check_user_is_admin(bot, message, message.chat.id)
     is_creator = await check_user_is_creator(bot, message.from_user.id, message.chat.id)
 
     if is_admin or is_creator:
-        await message.answer("Введите код фильма (целое число): ", reply_markup=adding_film_adding_keyboard)
+        await message.answer(
+            "Введите код фильма (целое число): ",
+            reply_markup=adding_film_adding_keyboard,
+        )
         await state.set_state(AddMovieState.waiting_for_code)
     else:
         await message.answer("Пошел нахуй отсюда")
@@ -40,7 +48,10 @@ async def process_movie_code(message: Message, state: FSMContext):
     try:
         await check_movie_exists(code=code)
         await state.update_data(movie_code=code)
-        await message.answer("Хорошо. Теперь введите название фильма:", reply_markup=adding_film_adding_keyboard)
+        await message.answer(
+            "Хорошо. Теперь введите название фильма:",
+            reply_markup=adding_film_adding_keyboard,
+        )
         await state.set_state(AddMovieState.waiting_for_name)
         return
     except CodeAlreadyExistsError:
@@ -49,7 +60,6 @@ async def process_movie_code(message: Message, state: FSMContext):
 
 @router.message(AddMovieState.waiting_for_name)
 async def process_movie_name(message: Message, state: FSMContext):
-
     # Отмена добавления фильма
     if message.text == "Отменить ввод фильма":
         await state.clear()
@@ -87,3 +97,11 @@ async def cancel(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("🚫 Добавление фильма отменено.")
 
+
+@router.message(F.text == "Последний фильм")
+async def get_last_movie_info(message: Message):
+    last_movie = await get_last_movie()
+    await message.answer(
+        f"<b>Код:</b> {last_movie.code} \n<b>Название:</b> {last_movie.name}",
+        parse_mode="HTML",
+    )
