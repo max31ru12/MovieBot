@@ -31,7 +31,11 @@ async def command_start_handler(message: Message) -> None:
     if user_db is None:
         await add_user_to_db(user_id, username)
 
-    keyboard = base_admin_menu if user_db.is_admin else base_user_menu
+    keyboard = (
+        base_admin_menu
+        if (user_db is not None and user_db.is_admin)
+        else base_user_menu
+    )
 
     await message.answer(
         "Для получения названия фильма подпишитесь на канал 1 и канал 3",

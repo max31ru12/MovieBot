@@ -3,15 +3,25 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
+from app.config import bot, CHANNEL_ONE_ID, CHANNEL_TWO_ID
 from app.database.services import (
     add_movie_to_db,
     CodeAlreadyExistsError,
     NameAlreadyExistsError,
     check_movie_exists,
     get_last_movie,
+    get_movie_by_code,
 )
-from app.keyboards.admin_keyboard import base_admin_menu, cancel_movie_admin_menu
-from app.utils import check_user_is_admin, check_user_is_creator
+from app.keyboards.admin_keyboard import (
+    base_admin_menu,
+    cancel_adding_movie_admin_menu,
+    cancel_getting_movie_admin_menu,
+)
+from app.utils import (
+    check_user_is_admin,
+    check_user_is_creator,
+    check_all_roles_for_channel,
+)
 
 router = Router()
 
@@ -30,7 +40,7 @@ async def add_movie(message: Message, bot: Bot, state: FSMContext):
     if is_admin or is_creator:
         await message.answer(
             "Введите код фильма (целое число): ",
-            reply_markup=cancel_movie_admin_menu,
+            reply_markup=cancel_adding_movie_admin_menu,
         )
         await state.set_state(AddMovieState.waiting_for_code)
     else:
@@ -49,7 +59,7 @@ async def process_movie_code(message: Message, state: FSMContext):
     if not message.text.isdigit():
         await message.answer(
             "❗ Пожалуйста, введите числовой код фильма.",
-            reply_markup=cancel_movie_admin_menu,
+            reply_markup=cancel_adding_movie_admin_menu,
         )
         return
 
@@ -60,13 +70,14 @@ async def process_movie_code(message: Message, state: FSMContext):
         await state.update_data(movie_code=code)
         await message.answer(
             "Хорошо. Теперь введите название фильма:",
-            reply_markup=cancel_movie_admin_menu,
+            reply_markup=cancel_adding_movie_admin_menu,
         )
         await state.set_state(AddMovieState.waiting_for_name)
         return
     except CodeAlreadyExistsError:
         await message.answer(
-            "Фильм с таким кодом уже существует", reply_markup=cancel_movie_admin_menu
+            "Фильм с таким кодом уже существует",
+            reply_markup=cancel_adding_movie_admin_menu,
         )
 
 
@@ -85,7 +96,7 @@ async def process_movie_name(message: Message, state: FSMContext):
     if not name:
         await message.answer(
             "❗ Название фильма не может быть пустым. Введите название ещё раз:",
-            reply_markup=cancel_movie_admin_menu,
+            reply_markup=cancel_adding_movie_admin_menu,
         )
         return
 
@@ -117,3 +128,57 @@ async def get_last_movie_info(message: Message):
         f"<b>Код:</b> {last_movie.code} \n<b>Название:</b> {last_movie.name}",
         parse_mode="HTML",
     )
+
+
+class GetMovieName(StatesGroup):
+    waiting_for_code = State()
+
+
+@router.message(F.text == "Фильм по коду")
+async def get_movie_name(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+
+    access = (
+        await check_all_roles_for_channel(bot, message, user_id, CHANNEL_ONE_ID)
+    ) and (await check_all_roles_for_channel(bot, message, user_id, CHANNEL_TWO_ID))
+
+    if access:
+        await message.answer(
+            "Введите код фильма", reply_markup=cancel_adding_movie_admin_menu
+        )
+        await state.set_state(GetMovieName.waiting_for_code)
+    else:
+        await message.answer(
+            "Тебе сюда нельзя",
+        )
+        return
+
+
+@router.message(GetMovieName.waiting_for_code)
+async def process_user_input_code(message: Message, state: FSMContext):
+    if message.text == "Отменить получение фильма":
+        await state.clear()
+        await message.answer("Ввод фильма отменен", reply_markup=base_admin_menu)
+        return
+
+    if not message.text.isdigit():
+        await message.answer(
+            "❗ Пожалуйста, введите числовой код фильма.",
+            reply_markup=cancel_getting_movie_admin_menu,
+        )
+        return
+
+    code = int(message.text)
+    movie = await get_movie_by_code(code)
+
+    if movie is None:
+        await message.answer(
+            "❗ Фильма с указанным кодом нет",
+            reply_markup=cancel_getting_movie_admin_menu,
+        )
+    else:
+        await message.answer(
+            f"<b>Название фильма:</b> {movie.name}",
+            parse_mode="HTML",
+            reply_markup=base_admin_menu,
+        )

@@ -38,14 +38,21 @@ async def check_user_is_creator(bot: Bot, user_id: int, channel: int | str) -> b
         return False
 
 
-async def check_all_roles(bot: Bot, user_id: int, channel: int | str) -> bool:
+async def check_all_roles_for_channel(
+    bot: Bot, message: Message, user_id: int, channel: int | str
+) -> bool:
     try:
         member = await bot.get_chat_member(channel, user_id)
-        return member.status in {
-            ChatMemberStatus.CREATOR,
-            ChatMemberStatus.MEMBER,
-            ChatMemberStatus.ADMINISTRATOR,
-        }
+        is_admin_db = await check_user_is_admin_db(message.from_user.username)
+        return (
+            member.status
+            in {
+                ChatMemberStatus.CREATOR,
+                ChatMemberStatus.MEMBER,
+                ChatMemberStatus.ADMINISTRATOR,
+            }
+            or is_admin_db
+        )
     except Exception as e:
         print(f"Ошибка при проверке пользователя в качестве создателя: {e}")
         return False
