@@ -130,12 +130,12 @@ async def get_last_movie_info(message: Message):
     )
 
 
-class GetMovieName(StatesGroup):
+class GetAdminMovieName(StatesGroup):
     waiting_for_code = State()
 
 
 @router.message(F.text == "Фильм по коду")
-async def get_movie_name(message: Message, state: FSMContext):
+async def get_admin_movie_name(message: Message, state: FSMContext):
     user_id = message.from_user.id
 
     access = (
@@ -146,7 +146,7 @@ async def get_movie_name(message: Message, state: FSMContext):
         await message.answer(
             "Введите код фильма", reply_markup=cancel_adding_movie_admin_menu
         )
-        await state.set_state(GetMovieName.waiting_for_code)
+        await state.set_state(GetAdminMovieName.waiting_for_code)
     else:
         await message.answer(
             "Тебе сюда нельзя",
@@ -154,8 +154,8 @@ async def get_movie_name(message: Message, state: FSMContext):
         return
 
 
-@router.message(GetMovieName.waiting_for_code)
-async def process_user_input_code(message: Message, state: FSMContext):
+@router.message(GetAdminMovieName.waiting_for_code)
+async def process_admin_user_input_code(message: Message, state: FSMContext):
     if message.text == "Отменить получение фильма":
         await state.clear()
         await message.answer("Ввод фильма отменен", reply_markup=base_admin_menu)
