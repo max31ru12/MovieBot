@@ -20,4 +20,3 @@ class User(Base):
     tg_username: Mapped[str] = mapped_column(unique=True)
 
     is_admin: Mapped[bool] = mapped_column(default=False)
-

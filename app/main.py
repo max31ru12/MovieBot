@@ -7,7 +7,7 @@ from aiogram.types import Message
 from app.config import bot
 from app.database.services import get_user_by_kwargs, add_user_to_db
 from app.keyboards.admin_keyboard import admin_start_keyboard
-from app.keyboards.user_keyboard import user_menu
+from app.keyboards.user_keyboard import base_user_menu
 from app.routers.admin_router import router as admin_router
 from app.routers.user_router import router as user_router
 
@@ -31,7 +31,7 @@ async def command_start_handler(message: Message) -> None:
     if user_db is None:
         await add_user_to_db(user_id, username)
 
-    keyboard = admin_start_keyboard if user_db.is_admin else user_menu
+    keyboard = admin_start_keyboard if user_db.is_admin else base_user_menu
 
     await message.answer(
         "Для получения названия фильма подпишитесь на канал 1 и канал 3",

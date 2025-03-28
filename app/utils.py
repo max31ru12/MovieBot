@@ -10,13 +10,13 @@ async def check_subscription(bot: Bot, user_id: int, channel: int | str) -> bool
         member = await bot.get_chat_member(channel, user_id)
         return member.status in {
             ChatMemberStatus.MEMBER,
-            # ChatMemberStatus.ADMINISTRATOR,
-            # ChatMemberStatus.CREATOR
+            ChatMemberStatus.ADMINISTRATOR,
+            ChatMemberStatus.CREATOR,
         }
     except Exception as e:
         # Канал не найден, бот не имеет доступа, пользователь заблокировал бота и т.д.
         print(f"Ошибка при проверке подписки: {e}")
-        raise e
+        return False
 
 
 async def check_user_is_admin(bot: Bot, message: Message, channel: int | str) -> bool:

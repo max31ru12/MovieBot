@@ -7,14 +7,23 @@ from aiogram.types import (
 
 from app.config import CHANNEL_ONE_NAME, CHANNEL_TWO_NAME
 
-user_menu = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="Узнать название фильма")]],
+base_user_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Узнать название фильма")],
+        [KeyboardButton(text="Подписаться на каналы")],
+    ],
     resize_keyboard=True,
     input_field_placeholder="Выберите действие...",
+    one_time_keyboard=False,
 )
 
 
-channels_to_subscribe_menu = InlineKeyboardMarkup(
+already_subscribed_user_menu = ReplyKeyboardMarkup(
+    keyboard=[[KeyboardButton(text="Я подписался")]], resize_keyboard=True
+)
+
+
+channels_to_subscribe_user_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(
@@ -29,4 +38,24 @@ channels_to_subscribe_menu = InlineKeyboardMarkup(
             )
         ],
     ]
+)
+
+
+cancel_movie_user_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Отменить ввод фильма")],
+    ],
+    resize_keyboard=True,
+    input_field_placeholder="Выберите действие...",
+)
+
+
+full_user_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Отменить ввод фильма")],
+        [KeyboardButton(text="Узнать название фильма")],
+        [KeyboardButton(text="Подписаться на каналы")],
+    ],
+    resize_keyboard=True,
+    input_field_placeholder="Выберите действие...",
 )

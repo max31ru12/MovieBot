@@ -11,7 +11,7 @@ admin_start_keyboard = ReplyKeyboardMarkup(
     input_field_placeholder="Выберите действие...",
 )
 
-adding_film_adding_keyboard = ReplyKeyboardMarkup(
+cancel_film_adding_keyboard = ReplyKeyboardMarkup(
     keyboard=[[KeyboardButton(text="Отменить ввод фильма")]],
     resize_keyboard=True,
     input_field_placeholder="Выберите действие...",

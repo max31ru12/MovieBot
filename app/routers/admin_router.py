@@ -10,7 +10,7 @@ from app.database.services import (
     check_movie_exists,
     get_last_movie,
 )
-from app.keyboards.admin_keyboard import adding_film_adding_keyboard
+from app.keyboards.user_keyboard import full_user_menu
 from app.utils import check_user_is_admin, check_user_is_creator
 
 router = Router()
@@ -30,7 +30,7 @@ async def add_movie(message: Message, bot: Bot, state: FSMContext):
     if is_admin or is_creator:
         await message.answer(
             "Введите код фильма (целое число): ",
-            reply_markup=adding_film_adding_keyboard,
+            reply_markup=full_user_menu,
         )
         await state.set_state(AddMovieState.waiting_for_code)
     else:
@@ -39,6 +39,11 @@ async def add_movie(message: Message, bot: Bot, state: FSMContext):
 
 @router.message(AddMovieState.waiting_for_code)
 async def process_movie_code(message: Message, state: FSMContext):
+    if message.text == "Отменить ввод фильма":
+        await state.clear()
+        await message.answer("🚫 Добавление фильма отменено.")
+        return
+
     if not message.text.isdigit():
         await message.answer("❗ Пожалуйста, введите числовой код фильма.")
         return
@@ -50,7 +55,7 @@ async def process_movie_code(message: Message, state: FSMContext):
         await state.update_data(movie_code=code)
         await message.answer(
             "Хорошо. Теперь введите название фильма:",
-            reply_markup=adding_film_adding_keyboard,
+            reply_markup=full_user_menu,
         )
         await state.set_state(AddMovieState.waiting_for_name)
         return
@@ -85,17 +90,6 @@ async def process_movie_name(message: Message, state: FSMContext):
     except NameAlreadyExistsError:
         await message.answer("Фильм с таким именем уже существует")
         return
-
-
-@router.message(F.text == "Отменить ввод фильма")
-async def cancel(message: Message, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state is None:
-        await message.answer("Нечего отменять. Вы не находитесь в процессе добавления.")
-        return
-
-    await state.clear()
-    await message.answer("🚫 Добавление фильма отменено.")
 
 
 @router.message(F.text == "Последний фильм")
