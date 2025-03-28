@@ -19,6 +19,22 @@ services:
     networks:
       - default
 
+  bot:
+    container_name: MovieBot
+    depends_on:
+      - database
+    build: .
+    env_file:
+      - ./.env
+    restart: "unless-stopped"
+    volumes:
+      - ./app:/bot/app/
+      - ./alembic/:/bot/alembic/
+    command: alembic upgrade head
+    networks:
+      - default
+
+
 
 
 volumes:
