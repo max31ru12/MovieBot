@@ -10,7 +10,7 @@ from app.database.services import (
     check_movie_exists,
     get_last_movie,
 )
-from app.keyboards.user_keyboard import full_user_menu
+from app.keyboards.admin_keyboard import base_admin_menu, cancel_movie_admin_menu
 from app.utils import check_user_is_admin, check_user_is_creator
 
 router = Router()
@@ -30,7 +30,7 @@ async def add_movie(message: Message, bot: Bot, state: FSMContext):
     if is_admin or is_creator:
         await message.answer(
             "Введите код фильма (целое число): ",
-            reply_markup=full_user_menu,
+            reply_markup=cancel_movie_admin_menu,
         )
         await state.set_state(AddMovieState.waiting_for_code)
     else:
@@ -39,13 +39,18 @@ async def add_movie(message: Message, bot: Bot, state: FSMContext):
 
 @router.message(AddMovieState.waiting_for_code)
 async def process_movie_code(message: Message, state: FSMContext):
-    if message.text == "Отменить ввод фильма":
+    if message.text == "Отменить добавление фильма":
         await state.clear()
-        await message.answer("🚫 Добавление фильма отменено.")
+        await message.answer(
+            "🚫 Добавление фильма отменено.", reply_markup=base_admin_menu
+        )
         return
 
     if not message.text.isdigit():
-        await message.answer("❗ Пожалуйста, введите числовой код фильма.")
+        await message.answer(
+            "❗ Пожалуйста, введите числовой код фильма.",
+            reply_markup=cancel_movie_admin_menu,
+        )
         return
 
     code = int(message.text)
@@ -55,27 +60,32 @@ async def process_movie_code(message: Message, state: FSMContext):
         await state.update_data(movie_code=code)
         await message.answer(
             "Хорошо. Теперь введите название фильма:",
-            reply_markup=full_user_menu,
+            reply_markup=cancel_movie_admin_menu,
         )
         await state.set_state(AddMovieState.waiting_for_name)
         return
     except CodeAlreadyExistsError:
-        await message.answer("Фильм с таким кодом уже существует")
+        await message.answer(
+            "Фильм с таким кодом уже существует", reply_markup=cancel_movie_admin_menu
+        )
 
 
 @router.message(AddMovieState.waiting_for_name)
 async def process_movie_name(message: Message, state: FSMContext):
     # Отмена добавления фильма
-    if message.text == "Отменить ввод фильма":
+    if message.text == "Отменить добавление фильма":
         await state.clear()
-        await message.answer("🚫 Добавление фильма отменено.")
+        await message.answer(
+            "🚫 Добавление фильма отменено.", reply_markup=base_admin_menu
+        )
         return
 
     name = message.text.strip()
 
     if not name:
         await message.answer(
-            "❗ Название фильма не может быть пустым. Введите название ещё раз:"
+            "❗ Название фильма не может быть пустым. Введите название ещё раз:",
+            reply_markup=cancel_movie_admin_menu,
         )
         return
 
@@ -88,8 +98,16 @@ async def process_movie_name(message: Message, state: FSMContext):
         await message.answer(f"✅ Фильм добавлен: <b>{code}</b> – {name}")
         await state.clear()
     except NameAlreadyExistsError:
-        await message.answer("Фильм с таким именем уже существует")
+        await message.answer(
+            "Фильм с таким именем уже существует", reply_markup=base_admin_menu
+        )
         return
+
+
+@router.message(F.text == "Отменить добавление фильма")
+async def process_cancel_adding_movie(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer("🚫 Добавление фильма отменено.", reply_markup=base_admin_menu)
 
 
 @router.message(F.text == "Последний фильм")

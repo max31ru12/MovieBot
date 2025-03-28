@@ -1,6 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-admin_start_keyboard = ReplyKeyboardMarkup(
+base_admin_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text="📥 Добавить фильм"),
@@ -11,8 +11,9 @@ admin_start_keyboard = ReplyKeyboardMarkup(
     input_field_placeholder="Выберите действие...",
 )
 
-cancel_film_adding_keyboard = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="Отменить ввод фильма")]],
+
+cancel_movie_admin_menu = ReplyKeyboardMarkup(
+    keyboard=[[KeyboardButton(text="Отменить добавление фильма")]],
     resize_keyboard=True,
     input_field_placeholder="Выберите действие...",
 )
