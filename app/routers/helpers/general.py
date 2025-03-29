@@ -2,7 +2,7 @@ from aiogram import Bot
 from aiogram.types import Message
 
 from app.config import MOVIE_CHANNEL_ID
-from app.database.services import get_movie_by_code
+from app.database.services import get_movie_by_id
 
 
 async def forward_movie_message(bot: Bot, message: Message, cancel_keyboard):
@@ -14,7 +14,7 @@ async def forward_movie_message(bot: Bot, message: Message, cancel_keyboard):
         return
 
     code = int(message.text)
-    movie = await get_movie_by_code(code)
+    movie = await get_movie_by_id(code)
 
     if movie is None:
         await message.answer(

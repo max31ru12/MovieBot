@@ -4,13 +4,13 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
 from app.config import bot, CHANNEL_ONE_ID, MOVIE_CHANNEL_ID
-from app.database.services import get_movie_by_code
 from app.keyboards.user_keyboard import (
     channels_to_subscribe_user_menu,
     base_user_menu,
     already_subscribed_user_menu,
     cancel_movie_user_menu,
 )
+from app.routers.helpers.general import forward_movie_message
 from app.utils import check_subscription
 
 router = Router()
@@ -45,26 +45,7 @@ async def process_user_input_code(message: Message, state: FSMContext):
         await message.answer("Ввод фильма отменен", reply_markup=base_user_menu)
         return
 
-    if not message.text.isdigit():
-        await message.answer(
-            "❗ Пожалуйста, введите числовой код фильма.",
-            reply_markup=cancel_movie_user_menu,
-        )
-        return
-
-    code = int(message.text)
-    movie = await get_movie_by_code(code)
-
-    if movie is None:
-        await message.answer(
-            "❗ Фильма с указанным кодом нет", reply_markup=cancel_movie_user_menu
-        )
-    else:
-        await bot.forward_message(
-            chat_id=message.chat.id,
-            from_chat_id=MOVIE_CHANNEL_ID,
-            message_id=movie.message_id,
-        )
+    await forward_movie_message(bot, message, cancel_movie_user_menu)
 
 
 @router.message(F.text == "Подписаться на каналы")

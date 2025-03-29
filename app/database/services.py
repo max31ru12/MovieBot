@@ -1,4 +1,4 @@
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, update
 
 from app.database.db_config import session_factory
 from app.database.models import User, Movie
@@ -39,10 +39,18 @@ async def check_movie_exists(code: int | None = None, name: str | None = None):
                 raise NameAlreadyExistsError("Movie with provided name already exists")
 
 
-async def add_movie_to_db(code: int, message_id: int) -> None:
+async def add_movie_to_db(message_id: int | None = None) -> Movie:
     async with session_factory() as session:
-        movie = Movie(code=code, message_id=message_id)
+        movie = Movie(message_id=message_id)
         session.add(movie)
+        await session.commit()
+        return movie
+
+
+async def update_movie_by_id(movie_id: int, message_id: int) -> None:
+    async with session_factory() as session:
+        stmt = update(Movie).where(Movie.id == movie_id).values(message_id=message_id)
+        await session.execute(stmt)
         await session.commit()
 
 
@@ -52,13 +60,13 @@ async def get_last_movie() -> Movie:
         return result.scalar_one_or_none()
 
 
-async def get_movie_by_code(code: int) -> Movie:
+async def get_movie_by_id(movie_id: int) -> Movie:
     async with session_factory() as session:
-        result = await session.execute(select(Movie).filter_by(code=code))
+        result = await session.execute(select(Movie).filter_by(id=movie_id))
         return result.scalar_one_or_none()
 
 
-async def add_user_to_db(tg_user_id: int, tg_username: str) -> None:
+async def add_user_to_db(tg_user_id: int, tg_username: str) -> User:
     async with session_factory() as session:
         user = User(tg_user_id=tg_user_id, tg_username=tg_username, is_admin=False)
         session.add(user)

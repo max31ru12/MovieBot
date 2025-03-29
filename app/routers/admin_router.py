@@ -4,7 +4,11 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
 from app.config import bot, MOVIE_CHANNEL_ID
-from app.database.services import add_movie_to_db, get_user_by_kwargs
+from app.database.services import (
+    add_movie_to_db,
+    get_user_by_kwargs,
+    update_movie_by_id,
+)
 from app.keyboards.admin_keyboard import (
     base_admin_menu,
     cancel_getting_movie_admin_menu,
@@ -18,7 +22,6 @@ router = Router()
 
 class AddFilmState(StatesGroup):
     waiting_for_title = State()
-    waiting_for_code = State()
     waiting_for_description = State()
     waiting_for_photo = State()
 
@@ -39,22 +42,6 @@ async def start_adding_film(message: Message, state: FSMContext):
 @router.message(AddFilmState.waiting_for_title)
 async def process_title(message: Message, state: FSMContext):
     await state.update_data(title=message.text.strip())
-    await state.set_state(AddFilmState.waiting_for_code)
-    await message.answer(
-        "Введите код фильма (целое число): ",
-        reply_markup=cancel_adding_movie_admin_menu,
-    )
-
-
-@router.message(AddFilmState.waiting_for_code)
-async def process_code(message: Message, state: FSMContext):
-    if not message.text.isdigit():
-        await message.answer(
-            "Код должен быть целым числом", reply_markup=cancel_adding_movie_admin_menu
-        )
-        return
-
-    await state.update_data(code=message.text)
     await state.set_state(AddFilmState.waiting_for_description)
     await message.answer(
         "Введите описание фильма: ", reply_markup=cancel_adding_movie_admin_menu
@@ -72,13 +59,14 @@ async def process_description(message: Message, state: FSMContext):
 
 @router.message(AddFilmState.waiting_for_photo, F.photo)
 async def process_photo(message: Message, state: FSMContext):
+    # Здесь бы по-хорошему ебануть транзакцию
+    movie = await add_movie_to_db()
+
     data = await state.get_data()
-
     file_id = message.photo[-1].file_id
-
     post_text = (
         f"<b>Название:</b> {data['title']}\n"
-        f"<b>Код:</b> {data['code']}\n"
+        f"<b>Код:</b> {movie.id}\n"
         f"<b>Описание:</b> {data['description']}"
     )
 
@@ -90,10 +78,8 @@ async def process_photo(message: Message, state: FSMContext):
     )
 
     message_id = int(post.message_id)
-    code = int(data["code"])
 
-    await add_movie_to_db(code, message_id)
-
+    await update_movie_by_id(movie_id=movie.id, message_id=message_id)
     await message.answer("✅ Фильм опубликован в канале!", reply_markup=base_admin_menu)
     await state.clear()
 
@@ -104,7 +90,10 @@ class GetMovieByAdmin(StatesGroup):
 
 @router.message(F.text == AdminMessages.GET_MOVIE_BY_CODE.value)
 async def get_movie_by_code_admin(message: Message, state: FSMContext):
-    # TODO прорека, что пользователь админ
+    user_db = await get_user_by_kwargs(tg_username=message.from_user.username)
+    if user_db is None or not user_db.is_admin:
+        await message.answer("Тебе сюда нельзя, убирайся!")
+        return
     await message.answer(
         "Введите числовой код фильма", reply_markup=cancel_getting_movie_admin_menu
     )
