@@ -7,13 +7,12 @@ from aiogram.types import Message
 from app.config import bot
 from app.database.services import get_user_by_kwargs, add_user_to_db
 from app.keyboards.admin_keyboard import base_admin_menu
-from app.keyboards.user_keyboard import base_user_menu
+from app.keyboards.user_keyboard import channels_to_subscribe_user_menu
 from app.routers.admin_router import router as admin_router
 from app.routers.user_router import router as user_router
 from app.routers.movie_channel_router import router as movie_channel_router
 
 dp = Dispatcher()
-
 
 dp.include_router(admin_router)
 dp.include_router(user_router)
@@ -32,17 +31,22 @@ async def command_start_handler(message: Message) -> None:
 
     if user_db is None:
         await add_user_to_db(user_id, username)
+        is_admin = False
+    else:
+        is_admin = user_db.is_admin
 
-    keyboard = (
-        base_admin_menu
-        if (user_db is not None and user_db.is_admin)
-        else base_user_menu
-    )
-
-    await message.answer(
-        "Для получения названия фильма подпишитесь на канал 1 и канал 3",
-        reply_markup=keyboard,
-    )
+    if is_admin:
+        await message.answer(
+            "Добро пожаловать",
+            reply_markup=base_admin_menu,
+        )
+    else:
+        await message.answer(
+            f"👋 Привет, {message.from_user.first_name}!\n\n"
+            "📢 Для использования бота нужно подписаться на каналы.\n"
+            "После подписки нажмите кнопку ниже ⬇️",
+            reply_markup=channels_to_subscribe_user_menu,
+        )
 
 
 @dp.message(Command("chat_info"))

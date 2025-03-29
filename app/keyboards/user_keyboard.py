@@ -6,11 +6,11 @@ from aiogram.types import (
 )
 
 from app.config import CHANNEL_ONE_NAME, MOVIE_CHANNEL_NAME
+from app.messages import UserMessages
 
 base_user_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Узнать название фильма")],
-        [KeyboardButton(text="Подписаться на каналы")],
+        [KeyboardButton(text=UserMessages.GET_MOVIE_BY_CODE.value)],
     ],
     resize_keyboard=True,
     input_field_placeholder="Выберите действие...",
@@ -18,8 +18,16 @@ base_user_menu = ReplyKeyboardMarkup(
 )
 
 
-already_subscribed_user_menu = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="Я подписался")]], resize_keyboard=True
+already_subscribed_user_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="✅ Подтверждено!",
+                callback_data=UserMessages.CHECK_SUBSCRIPTION.value,
+            )
+        ]
+    ],
+    resize_keyboard=True,
 )
 
 
@@ -37,6 +45,12 @@ channels_to_subscribe_user_menu = InlineKeyboardMarkup(
                 url="https://t.me/movietestkanal2",
             )
         ],
+        [
+            InlineKeyboardButton(
+                text="Уже подписаны?",
+                callback_data=UserMessages.CHECK_SUBSCRIPTION.value,
+            )
+        ],
     ]
 )
 
@@ -44,17 +58,6 @@ channels_to_subscribe_user_menu = InlineKeyboardMarkup(
 cancel_movie_user_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Отменить ввод фильма")],
-    ],
-    resize_keyboard=True,
-    input_field_placeholder="Выберите действие...",
-)
-
-
-full_user_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Отменить ввод фильма")],
-        [KeyboardButton(text="Узнать название фильма")],
-        [KeyboardButton(text="Подписаться на каналы")],
     ],
     resize_keyboard=True,
     input_field_placeholder="Выберите действие...",

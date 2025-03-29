@@ -1,7 +1,6 @@
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.types import Message
 
-from app.database.services import add_movie_to_db
 
 router = Router()
 
@@ -14,16 +13,6 @@ def parse_post_text(message: Message) -> dict:
     }
 
 
-@router.channel_post(F.text)
-async def handle_channel_post(message: Message):
-    parsed_message_text = parse_post_text(message)
-
-    code = parsed_message_text["Код"]
-    message_id = message.message_id
-
-    try:
-        await add_movie_to_db(code, message_id)
-    except Exception as e:  # noqa
-        await message.answer(text="Код уже занят")
-
-    await message.answer("Был опубликован пост")
+# @router.channel_post(F.text)
+# async def handle_channel_post(message: Message):
+#     await message.answer("Был опубликован пост")
