@@ -39,9 +39,9 @@ async def check_movie_exists(code: int | None = None, name: str | None = None):
                 raise NameAlreadyExistsError("Movie with provided name already exists")
 
 
-async def add_movie_to_db(code: int, name: str) -> None:
+async def add_movie_to_db(code: int, message_id: int) -> None:
     async with session_factory() as session:
-        movie = Movie(code=code, name=name)
+        movie = Movie(code=code, message_id=message_id)
         session.add(movie)
         await session.commit()
 

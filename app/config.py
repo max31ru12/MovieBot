@@ -17,8 +17,8 @@ DB_PASSWORD = getenv("DB_PASSWORD", "test")
 CHANNEL_ONE_ID = int(getenv("CHANNEL_ONE_ID", default=-1002604536192))
 CHANNEL_ONE_NAME = getenv("CHANNEL_ONE_NAME", default="Channel 1")
 
-CHANNEL_TWO_ID = int(getenv("CHANNEL_TWO_ID", default=-1002684458709))
-CHANNEL_TWO_NAME = getenv("CHANNEL_TWO_NAME", default="Channel 2")
+MOVIE_CHANNEL_ID = int(getenv("MOVIE_CHANNEL_ID", default=-1002684458709))
+MOVIE_CHANNEL_NAME = getenv("CHANNEL_TWO_NAME", default="Movie channel")
 
 bot = Bot(token=TOKEN)
 

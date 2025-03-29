@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from app.config import bot, CHANNEL_ONE_ID, CHANNEL_TWO_ID
+from app.config import bot, CHANNEL_ONE_ID, MOVIE_CHANNEL_ID
 from app.database.services import get_movie_by_code
 from app.keyboards.user_keyboard import (
     channels_to_subscribe_user_menu,
@@ -25,7 +25,7 @@ async def get_movie_name(message: Message, state: FSMContext):
     user_id = message.from_user.id
     access = await check_subscription(
         bot, user_id, CHANNEL_ONE_ID
-    ) and await check_subscription(bot, user_id, CHANNEL_TWO_ID)
+    ) and await check_subscription(bot, user_id, MOVIE_CHANNEL_ID)
 
     if access:
         await message.answer("Введите код фильма", reply_markup=cancel_movie_user_menu)
@@ -60,10 +60,10 @@ async def process_user_input_code(message: Message, state: FSMContext):
             "❗ Фильма с указанным кодом нет", reply_markup=cancel_movie_user_menu
         )
     else:
-        await message.answer(
-            f"<b>Название фильма:</b> {movie.name}",
-            parse_mode="HTML",
-            reply_markup=base_user_menu,
+        await bot.forward_message(
+            chat_id=message.chat.id,
+            from_chat_id=MOVIE_CHANNEL_ID,
+            message_id=movie.message_id,
         )
 
 
@@ -93,4 +93,4 @@ async def cancel(message: Message, state: FSMContext):
         return
 
     await state.clear()
-    await message.answer("🚫 Добавление фильма отменено.", reply_markup=base_user_menu)
+    await message.answer("🚫 Получение фильма отменено.", reply_markup=base_user_menu)

@@ -1,184 +1,137 @@
-from aiogram import Router, Bot, F
+from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from app.config import bot, CHANNEL_ONE_ID, CHANNEL_TWO_ID
-from app.database.services import (
-    add_movie_to_db,
-    CodeAlreadyExistsError,
-    NameAlreadyExistsError,
-    check_movie_exists,
-    get_last_movie,
-    get_movie_by_code,
-)
+from app.config import bot, MOVIE_CHANNEL_ID
+from app.database.services import add_movie_to_db, get_user_by_kwargs
 from app.keyboards.admin_keyboard import (
     base_admin_menu,
-    cancel_adding_movie_admin_menu,
     cancel_getting_movie_admin_menu,
+    cancel_adding_movie_admin_menu,
 )
-from app.utils import (
-    check_user_is_admin,
-    check_user_is_creator,
-    check_all_roles_for_channel,
-)
+from app.messages import AdminMessages
+from app.routers.helpers.general import forward_movie_message
 
 router = Router()
 
 
-# Определяем класс состояний для сценария добавления фильма
-class AddMovieState(StatesGroup):
+class AddFilmState(StatesGroup):
+    waiting_for_title = State()
     waiting_for_code = State()
-    waiting_for_name = State()
+    waiting_for_description = State()
+    waiting_for_photo = State()
 
 
-@router.message(F.text == "📥 Добавить фильм")
-async def add_movie(message: Message, bot: Bot, state: FSMContext):
-    is_admin = await check_user_is_admin(bot, message, message.chat.id)
-    is_creator = await check_user_is_creator(bot, message.from_user.id, message.chat.id)
-
-    if is_admin or is_creator:
-        await message.answer(
-            "Введите код фильма (целое число): ",
-            reply_markup=cancel_adding_movie_admin_menu,
-        )
-        await state.set_state(AddMovieState.waiting_for_code)
-    else:
-        await message.answer("Пошел нахуй отсюда")
-
-
-@router.message(AddMovieState.waiting_for_code)
-async def process_movie_code(message: Message, state: FSMContext):
-    if message.text == "Отменить добавление фильма":
-        await state.clear()
-        await message.answer(
-            "🚫 Добавление фильма отменено.", reply_markup=base_admin_menu
-        )
+@router.message(F.text == AdminMessages.ADD_MOVIE.value)
+async def start_adding_film(message: Message, state: FSMContext):
+    user_db = await get_user_by_kwargs(tg_username=message.from_user.username)
+    if user_db is None or not user_db.is_admin:
+        await message.answer("Тебе сюда нельзя, убирайся!")
         return
 
-    if not message.text.isdigit():
-        await message.answer(
-            "❗ Пожалуйста, введите числовой код фильма.",
-            reply_markup=cancel_adding_movie_admin_menu,
-        )
-        return
-
-    code = int(message.text)
-
-    try:
-        await check_movie_exists(code=code)
-        await state.update_data(movie_code=code)
-        await message.answer(
-            "Хорошо. Теперь введите название фильма:",
-            reply_markup=cancel_adding_movie_admin_menu,
-        )
-        await state.set_state(AddMovieState.waiting_for_name)
-        return
-    except CodeAlreadyExistsError:
-        await message.answer(
-            "Фильм с таким кодом уже существует",
-            reply_markup=cancel_adding_movie_admin_menu,
-        )
-
-
-@router.message(AddMovieState.waiting_for_name)
-async def process_movie_name(message: Message, state: FSMContext):
-    # Отмена добавления фильма
-    if message.text == "Отменить добавление фильма":
-        await state.clear()
-        await message.answer(
-            "🚫 Добавление фильма отменено.", reply_markup=base_admin_menu
-        )
-        return
-
-    name = message.text.strip()
-
-    if not name:
-        await message.answer(
-            "❗ Название фильма не может быть пустым. Введите название ещё раз:",
-            reply_markup=cancel_adding_movie_admin_menu,
-        )
-        return
-
-    data = await state.get_data()
-    code = data.get("movie_code")
-
-    try:
-        await check_movie_exists(name=name)
-        await add_movie_to_db(code, name)
-        await message.answer(f"✅ Фильм добавлен: <b>{code}</b> – {name}")
-        await state.clear()
-    except NameAlreadyExistsError:
-        await message.answer(
-            "Фильм с таким именем уже существует", reply_markup=base_admin_menu
-        )
-        return
-
-
-@router.message(F.text == "Отменить добавление фильма")
-async def process_cancel_adding_movie(message: Message, state: FSMContext):
-    await state.clear()
-    await message.answer("🚫 Добавление фильма отменено.", reply_markup=base_admin_menu)
-
-
-@router.message(F.text == "Последний фильм")
-async def get_last_movie_info(message: Message):
-    last_movie = await get_last_movie()
+    await state.set_state(AddFilmState.waiting_for_title)
     await message.answer(
-        f"<b>Код:</b> {last_movie.code} \n<b>Название:</b> {last_movie.name}",
-        parse_mode="HTML",
+        "Введите название фильма: ", reply_markup=cancel_adding_movie_admin_menu
     )
 
 
-class GetAdminMovieName(StatesGroup):
-    waiting_for_code = State()
+@router.message(AddFilmState.waiting_for_title)
+async def process_title(message: Message, state: FSMContext):
+    await state.update_data(title=message.text.strip())
+    await state.set_state(AddFilmState.waiting_for_code)
+    await message.answer(
+        "Введите код фильма (целое число): ",
+        reply_markup=cancel_adding_movie_admin_menu,
+    )
 
 
-@router.message(F.text == "Фильм по коду")
-async def get_admin_movie_name(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-
-    access = (
-        await check_all_roles_for_channel(bot, message, user_id, CHANNEL_ONE_ID)
-    ) and (await check_all_roles_for_channel(bot, message, user_id, CHANNEL_TWO_ID))
-
-    if access:
+@router.message(AddFilmState.waiting_for_code)
+async def process_code(message: Message, state: FSMContext):
+    if not message.text.isdigit():
         await message.answer(
-            "Введите код фильма", reply_markup=cancel_adding_movie_admin_menu
-        )
-        await state.set_state(GetAdminMovieName.waiting_for_code)
-    else:
-        await message.answer(
-            "Тебе сюда нельзя",
+            "Код должен быть целым числом", reply_markup=cancel_adding_movie_admin_menu
         )
         return
 
+    await state.update_data(code=message.text)
+    await state.set_state(AddFilmState.waiting_for_description)
+    await message.answer(
+        "Введите описание фильма: ", reply_markup=cancel_adding_movie_admin_menu
+    )
 
-@router.message(GetAdminMovieName.waiting_for_code)
-async def process_admin_user_input_code(message: Message, state: FSMContext):
-    if message.text == "Отменить получение фильма":
+
+@router.message(AddFilmState.waiting_for_description)
+async def process_description(message: Message, state: FSMContext):
+    await state.update_data(description=message.text.strip())
+    await state.set_state(AddFilmState.waiting_for_photo)
+    await message.answer(
+        "Пришлите фото (постер) фильма:", reply_markup=cancel_adding_movie_admin_menu
+    )
+
+
+@router.message(AddFilmState.waiting_for_photo, F.photo)
+async def process_photo(message: Message, state: FSMContext):
+    data = await state.get_data()
+
+    file_id = message.photo[-1].file_id
+
+    post_text = (
+        f"<b>Название:</b> {data['title']}\n"
+        f"<b>Код:</b> {data['code']}\n"
+        f"<b>Описание:</b> {data['description']}"
+    )
+
+    post = await bot.send_photo(
+        chat_id=MOVIE_CHANNEL_ID,
+        photo=file_id,
+        caption=post_text,
+        parse_mode="HTML",
+    )
+
+    message_id = int(post.message_id)
+    code = int(data["code"])
+
+    await add_movie_to_db(code, message_id)
+
+    await message.answer("✅ Фильм опубликован в канале!", reply_markup=base_admin_menu)
+    await state.clear()
+
+
+class GetMovieByAdmin(StatesGroup):
+    waiting_for_code = State()
+
+
+@router.message(F.text == AdminMessages.GET_MOVIE_BY_CODE.value)
+async def get_movie_by_code_admin(message: Message, state: FSMContext):
+    # TODO прорека, что пользователь админ
+    await message.answer(
+        "Введите числовой код фильма", reply_markup=cancel_getting_movie_admin_menu
+    )
+    await state.set_state(GetMovieByAdmin.waiting_for_code)
+
+
+@router.message(GetMovieByAdmin.waiting_for_code)
+async def process_code_input_admin(message: Message, state: FSMContext):
+    if message.text == AdminMessages.CANCEL_GETTING_MOVIE.value:
         await state.clear()
         await message.answer("Ввод фильма отменен", reply_markup=base_admin_menu)
         return
 
-    if not message.text.isdigit():
-        await message.answer(
-            "❗ Пожалуйста, введите числовой код фильма.",
-            reply_markup=cancel_getting_movie_admin_menu,
-        )
-        return
+    await forward_movie_message(bot, message, cancel_getting_movie_admin_menu)
 
-    code = int(message.text)
-    movie = await get_movie_by_code(code)
 
-    if movie is None:
+# всякие отменялки внизу
+
+
+@router.message(F.text == AdminMessages.CANCEL_ADDING_MOVIE.value)
+async def process_cancel_adding_movie(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
         await message.answer(
-            "❗ Фильма с указанным кодом нет",
-            reply_markup=cancel_getting_movie_admin_menu,
-        )
-    else:
-        await message.answer(
-            f"<b>Название фильма:</b> {movie.name}",
-            parse_mode="HTML",
+            "Нечего отменять. Вы не находитесь в процессе добавления.",
             reply_markup=base_admin_menu,
         )
+        return
+    await state.clear()
+    await message.answer("🚫 Добавление фильма отменено.", reply_markup=base_admin_menu)

@@ -5,7 +5,7 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 
-from app.config import CHANNEL_ONE_NAME, CHANNEL_TWO_NAME
+from app.config import CHANNEL_ONE_NAME, MOVIE_CHANNEL_NAME
 
 base_user_menu = ReplyKeyboardMarkup(
     keyboard=[
@@ -33,7 +33,7 @@ channels_to_subscribe_user_menu = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
-                text=f"Подписаться на канал {CHANNEL_TWO_NAME}",
+                text=f"Подписаться на канал {MOVIE_CHANNEL_NAME}",
                 url="https://t.me/movietestkanal2",
             )
         ],

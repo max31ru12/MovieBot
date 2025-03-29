@@ -10,12 +10,14 @@ from app.keyboards.admin_keyboard import base_admin_menu
 from app.keyboards.user_keyboard import base_user_menu
 from app.routers.admin_router import router as admin_router
 from app.routers.user_router import router as user_router
+from app.routers.movie_channel_router import router as movie_channel_router
 
 dp = Dispatcher()
 
 
 dp.include_router(admin_router)
 dp.include_router(user_router)
+dp.include_router(movie_channel_router)
 
 
 async def main():
