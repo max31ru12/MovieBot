@@ -1,15 +1,7 @@
-from sqlalchemy import select, desc, update
+from sqlalchemy import select, update
 
 from app.database.db_config import session_factory
 from app.database.models import User, Movie
-
-
-class CodeAlreadyExistsError(Exception):
-    pass
-
-
-class NameAlreadyExistsError(Exception):
-    pass
 
 
 async def check_user_is_admin_db(username: str) -> bool:
@@ -20,23 +12,6 @@ async def check_user_is_admin_db(username: str) -> bool:
     if user is None:
         return False
     return user.is_admin
-
-
-async def check_movie_exists(code: int | None = None, name: str | None = None):
-    async with session_factory() as session:
-        if code is not None:
-            movie = (
-                await session.execute(select(Movie).filter_by(code=code))
-            ).scalar_one_or_none()
-            if movie is not None:
-                raise CodeAlreadyExistsError("Movie with provided code already exists")
-
-        if name is not None:
-            movie = (
-                await session.execute(select(Movie).filter_by(name=name))
-            ).scalar_one_or_none()
-            if movie is not None:
-                raise NameAlreadyExistsError("Movie with provided name already exists")
 
 
 async def add_movie_to_db(message_id: int | None = None) -> Movie:
@@ -52,12 +27,6 @@ async def update_movie_by_id(movie_id: int, message_id: int) -> None:
         stmt = update(Movie).where(Movie.id == movie_id).values(message_id=message_id)
         await session.execute(stmt)
         await session.commit()
-
-
-async def get_last_movie() -> Movie:
-    async with session_factory() as session:
-        result = await session.execute(select(Movie).order_by(desc(Movie.id)).limit(1))
-        return result.scalar_one_or_none()
 
 
 async def get_movie_by_id(movie_id: int) -> Movie:
