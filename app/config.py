@@ -10,9 +10,9 @@ TOKEN = getenv("TOKEN")
 
 DB_HOST = getenv("DB_HOST", default="localhost")
 DB_PORT = getenv("DB_PORT", default=5432)
-DB_NAME = getenv("DB_NAME", "test")
-DB_USER = getenv("DB_USER", "test")
-DB_PASSWORD = getenv("DB_PASSWORD", "test")
+DB_NAME = getenv("DB_NAME", default="test")
+DB_USER = getenv("DB_USER", default="test")
+DB_PASSWORD = getenv("DB_PASSWORD", default="test")
 
 CHANNEL_ONE_ID = int(getenv("CHANNEL_ONE_ID", default=-1002604536192))
 CHANNEL_ONE_NAME = getenv("CHANNEL_ONE_NAME", default="Channel 1")

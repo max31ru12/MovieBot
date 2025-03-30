@@ -15,7 +15,7 @@ from app.keyboards.admin_keyboard import (
     cancel_adding_movie_admin_menu,
 )
 from app.messages import AdminMessages
-from app.routers.helpers.general import forward_movie_message
+from app.utils.utils import forward_movie_message
 
 router = Router()
 

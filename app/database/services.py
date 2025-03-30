@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from sqlalchemy import select, update
 
 from app.database.db_config import session_factory
@@ -47,3 +49,10 @@ async def get_user_by_kwargs(**kwargs) -> User:
     async with session_factory() as session:
         result = await session.execute(select(User).filter_by(**kwargs))
         return result.scalar_one_or_none()
+
+
+async def get_all_users() -> Sequence[User]:
+    async with session_factory() as session:
+        result = await session.execute(select(User).filter_by(is_admin=False))
+        users = result.scalars().all()
+        return users

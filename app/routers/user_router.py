@@ -11,8 +11,8 @@ from app.keyboards.user_keyboard import (
     cancel_movie_user_menu,
 )
 from app.messages import UserMessages
-from app.routers.helpers.general import forward_movie_message
-from app.utils import check_subscription
+from app.utils.check_permissions import check_subscription
+from app.utils.utils import forward_movie_message
 
 router = Router()
 
