@@ -6,6 +6,8 @@ class AdminMessages(Enum):
     GET_MOVIE_BY_CODE = "Получить фильм по коду"
     CANCEL_ADDING_MOVIE = "Отменить добавление фильма"
     CANCEL_GETTING_MOVIE = "Отменить получение фильма"
+    BROADCAST_MESSAGE = "Сделать рассылку"
+    CANCEL_BROADCAST = "Отменить рассылку"
 
 
 class UserMessages(Enum):

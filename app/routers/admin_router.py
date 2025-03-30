@@ -13,9 +13,10 @@ from app.keyboards.admin_keyboard import (
     base_admin_menu,
     cancel_getting_movie_admin_menu,
     cancel_adding_movie_admin_menu,
+    cancel_broadcast_admin_menu,
 )
 from app.messages import AdminMessages
-from app.utils.utils import forward_movie_message
+from app.utils.utils import forward_movie_message, broadcast
 
 router = Router()
 
@@ -110,6 +111,35 @@ async def process_code_input_admin(message: Message, state: FSMContext):
     await forward_movie_message(bot, message, cancel_getting_movie_admin_menu)
 
 
+class BroadcastState(StatesGroup):
+    waiting_for_message = State()
+
+
+@router.message(F.text == AdminMessages.BROADCAST_MESSAGE.value)
+async def start_broadcasting_message(message: Message, state: FSMContext):
+    user_db = await get_user_by_kwargs(tg_username=message.from_user.username)
+    if user_db is None or not user_db.is_admin:
+        await message.answer("Тебе сюда нельзя, убирайся!")
+        return
+
+    await message.answer(
+        "Введите сообщение: ", reply_markup=cancel_broadcast_admin_menu
+    )
+    await state.set_state(BroadcastState.waiting_for_message)
+
+
+@router.message(BroadcastState.waiting_for_message)
+async def broadcast_message(message: Message, state: FSMContext):
+    if message.text == AdminMessages.CANCEL_BROADCAST.value:
+        await state.clear()
+        await message.answer("Рассылка отменена", reply_markup=base_admin_menu)
+        return
+
+    await broadcast(bot, message.text)
+    await state.clear()
+    await message.answer("Рассылка заверешена!", reply_markup=base_admin_menu)
+
+
 # всякие отменялки внизу
 
 
@@ -124,3 +154,16 @@ async def process_cancel_adding_movie(message: Message, state: FSMContext):
         return
     await state.clear()
     await message.answer("🚫 Добавление фильма отменено.", reply_markup=base_admin_menu)
+
+
+@router.message(F.text == AdminMessages.CANCEL_BROADCAST.value)
+async def process_cancel_broadcast(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        await message.answer(
+            "Нечего отменять. Вы не находитесь в процессе рассылки.",
+            reply_markup=base_admin_menu,
+        )
+        return
+    await message.answer("Рассылка отменена", reply_markup=base_admin_menu)
+    await state.clear()
