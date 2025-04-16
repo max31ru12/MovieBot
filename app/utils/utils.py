@@ -9,7 +9,7 @@ from app.database.services import get_all_users, get_movie_by_id
 async def forward_movie_message(bot: Bot, message: Message, cancel_keyboard):
     if not message.text.isdigit():
         await message.answer(
-            "❗ Пожалуйста, введите числовой код фильма.",
+            "❗ Код фильма должен быть числом",
             reply_markup=cancel_keyboard,
         )
         return

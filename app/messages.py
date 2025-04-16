@@ -14,3 +14,5 @@ class UserMessages(Enum):
     GET_MOVIE_BY_CODE = "Узнать название фильма"
     CHECK_SUBSCRIPTION = "Проверить подписку"
     CANCEL_GETTING_MOVIE = "Отменить ввод фильма"
+    ALREADY_SUBSCRIBED = "✅ Подтверждено!"
+    GET_MOVIE_BY_GENRE = "Подобрать фильм по жанру"

@@ -14,6 +14,8 @@ DB_NAME = getenv("DB_NAME", default="test")
 DB_USER = getenv("DB_USER", default="test")
 DB_PASSWORD = getenv("DB_PASSWORD", default="test")
 
+DEEPSEEK_API_KEY = getenv("DEEPSEEK_API_KEY", default="")
+
 CHANNEL_ONE_ID = int(getenv("CHANNEL_ONE_ID", default=-1002604536192))
 CHANNEL_ONE_NAME = getenv("CHANNEL_ONE_NAME", default="Channel 1")
 

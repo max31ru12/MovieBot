@@ -11,6 +11,7 @@ from app.messages import UserMessages
 base_user_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text=UserMessages.GET_MOVIE_BY_CODE.value)],
+        # [KeyboardButton(text=UserMessages.GET_MOVIE_BY_GENRE.value)]
     ],
     resize_keyboard=True,
     input_field_placeholder="Выберите действие...",
@@ -23,7 +24,7 @@ already_subscribed_user_menu = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text="✅ Подтверждено!",
-                callback_data=UserMessages.CHECK_SUBSCRIPTION.value,
+                callback_data=UserMessages.ALREADY_SUBSCRIBED.value,
             )
         ]
     ],

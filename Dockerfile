@@ -11,4 +11,4 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 ENV PYTHONPATH=/bot
 
-ENTRYPOINT ["python3", "app/main.py"]
+ENTRYPOINT ["python3", "/bot/app/main.py"]

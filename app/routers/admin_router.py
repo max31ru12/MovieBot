@@ -24,6 +24,7 @@ router = Router()
 class AddFilmState(StatesGroup):
     waiting_for_title = State()
     waiting_for_description = State()
+    waiting_for_genre = State()
     waiting_for_photo = State()
 
 
@@ -52,6 +53,15 @@ async def process_title(message: Message, state: FSMContext):
 @router.message(AddFilmState.waiting_for_description)
 async def process_description(message: Message, state: FSMContext):
     await state.update_data(description=message.text.strip())
+    await state.set_state(AddFilmState.waiting_for_genre)
+    await message.answer(
+        "Введите жанр/жанры фильма", reply_markup=cancel_adding_movie_admin_menu
+    )
+
+
+@router.message(AddFilmState.waiting_for_genre)
+async def process_genre(message: Message, state: FSMContext):
+    await state.update_data(genre=message.text.strip())
     await state.set_state(AddFilmState.waiting_for_photo)
     await message.answer(
         "Пришлите фото (постер) фильма:", reply_markup=cancel_adding_movie_admin_menu
@@ -60,7 +70,7 @@ async def process_description(message: Message, state: FSMContext):
 
 @router.message(AddFilmState.waiting_for_photo, F.photo)
 async def process_photo(message: Message, state: FSMContext):
-    # Здесь бы по-хорошему ебануть транзакцию
+    # Здесь бы по-хорошему сделать транзакцию
     movie = await add_movie_to_db()
 
     data = await state.get_data()
@@ -68,6 +78,7 @@ async def process_photo(message: Message, state: FSMContext):
     post_text = (
         f"<b>Название:</b> {data['title']}\n"
         f"<b>Код:</b> {movie.id}\n"
+        f"<b>Жанр:</b> {data['genre']}\n"
         f"<b>Описание:</b> {data['description']}"
     )
 
@@ -109,6 +120,7 @@ async def process_code_input_admin(message: Message, state: FSMContext):
         return
 
     await forward_movie_message(bot, message, cancel_getting_movie_admin_menu)
+    await message.answer("Выберите действие...", reply_markup=base_admin_menu)
 
 
 class BroadcastState(StatesGroup):
