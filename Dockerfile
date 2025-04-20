@@ -19,4 +19,6 @@ RUN poetry install --no-interaction --no-root
 
 ENV PYTHONPATH=/bot
 
+RUN chmod +x entrypoint.sh
+
 ENTRYPOINT ["./entrypoint.sh"]
