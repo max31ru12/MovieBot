@@ -11,7 +11,8 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /bot
 
-COPY entrypoint.sh pyproject.toml poetry.lock alembic.ini ./
+COPY entrypoint.sh .
+COPY pyproject.toml poetry.lock alembic.ini ./
 
 RUN poetry config virtualenvs.create false
 
