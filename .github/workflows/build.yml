@@ -71,7 +71,3 @@ jobs:
           done
           echo "PostgreSQL failed to start"
           exit 1
-
-      - name: Run migrations
-        run: |
-          docker compose run --rm bot poetry run alembic upgrade head
