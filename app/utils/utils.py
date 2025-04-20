@@ -21,12 +21,14 @@ async def forward_movie_message(bot: Bot, message: Message, cancel_keyboard):
         await message.answer(
             "❗ Фильма с указанным кодом нет", reply_markup=cancel_keyboard
         )
+        return False
     else:
         await bot.forward_message(
             chat_id=message.chat.id,
             from_chat_id=MOVIE_CHANNEL_ID,
             message_id=movie.message_id,
         )
+        return True
 
 
 async def broadcast(bot: Bot, text: str) -> None:

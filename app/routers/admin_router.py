@@ -43,6 +43,11 @@ async def start_adding_film(message: Message, state: FSMContext):
 
 @router.message(AddFilmState.waiting_for_title)
 async def process_title(message: Message, state: FSMContext):
+    if message.text == AdminMessages.CANCEL_ADDING_MOVIE.value:
+        await state.clear()
+        await message.answer("Добавление фильма отменено", reply_markup=base_admin_menu)
+        return
+
     await state.update_data(title=message.text.strip())
     await state.set_state(AddFilmState.waiting_for_description)
     await message.answer(
@@ -52,6 +57,11 @@ async def process_title(message: Message, state: FSMContext):
 
 @router.message(AddFilmState.waiting_for_description)
 async def process_description(message: Message, state: FSMContext):
+    if message.text == AdminMessages.CANCEL_ADDING_MOVIE.value:
+        await state.clear()
+        await message.answer("Добавление фильма отменено", reply_markup=base_admin_menu)
+        return
+
     await state.update_data(description=message.text.strip())
     await state.set_state(AddFilmState.waiting_for_genre)
     await message.answer(
@@ -61,6 +71,11 @@ async def process_description(message: Message, state: FSMContext):
 
 @router.message(AddFilmState.waiting_for_genre)
 async def process_genre(message: Message, state: FSMContext):
+    if message.text == AdminMessages.CANCEL_ADDING_MOVIE.value:
+        await state.clear()
+        await message.answer("Добавление фильма отменено", reply_markup=base_admin_menu)
+        return
+
     await state.update_data(genre=message.text.strip())
     await state.set_state(AddFilmState.waiting_for_photo)
     await message.answer(
@@ -70,6 +85,11 @@ async def process_genre(message: Message, state: FSMContext):
 
 @router.message(AddFilmState.waiting_for_photo, F.photo)
 async def process_photo(message: Message, state: FSMContext):
+    if message.text == AdminMessages.CANCEL_ADDING_MOVIE.value:
+        await state.clear()
+        await message.answer("Добавление фильма отменено", reply_markup=base_admin_menu)
+        return
+
     # Здесь бы по-хорошему сделать транзакцию
     movie = await add_movie_to_db()
 
@@ -119,8 +139,11 @@ async def process_code_input_admin(message: Message, state: FSMContext):
         await message.answer("Ввод фильма отменен", reply_markup=base_admin_menu)
         return
 
-    await forward_movie_message(bot, message, cancel_getting_movie_admin_menu)
-    await message.answer("Выберите действие...", reply_markup=base_admin_menu)
+    movie_found = await forward_movie_message(
+        bot, message, cancel_getting_movie_admin_menu
+    )
+    if movie_found:
+        await message.answer("Выберите действие...", reply_markup=base_admin_menu)
 
 
 class BroadcastState(StatesGroup):
@@ -153,8 +176,6 @@ async def broadcast_message(message: Message, state: FSMContext):
 
 
 # всякие отменялки внизу
-
-
 @router.message(F.text == AdminMessages.CANCEL_ADDING_MOVIE.value)
 async def process_cancel_adding_movie(message: Message, state: FSMContext):
     current_state = await state.get_state()

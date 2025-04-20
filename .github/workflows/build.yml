@@ -22,7 +22,7 @@ jobs:
         run: |
            poetry run ruff check .
 
-  migrations:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
