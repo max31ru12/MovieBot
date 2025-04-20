@@ -91,7 +91,7 @@ jobs:
 
       - name: Deploy
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ secrets.USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd MovieBot
             git pull origin main
             docker compose down
