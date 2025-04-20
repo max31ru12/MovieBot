@@ -15,7 +15,9 @@ jobs:
           python-version: '3.13'
       - name: Install dependencies
         run: |
-          pip install --upgrade pip && pip install -r requirements.txt
+          sudo curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install --with dev
       - name: Lint with ruff
         run: |
            ruff check .
@@ -65,4 +67,4 @@ jobs:
 
       - name: Run migrations
         run: |
-          docker compose -f local.yml run --rm bot alembic upgrade head
+          docker compose -f local.yml run --rm bot poetry run alembic upgrade head
