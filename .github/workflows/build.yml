@@ -20,7 +20,7 @@ jobs:
           poetry install --with dev
       - name: Lint with ruff
         run: |
-           ruff check .
+           poetry run ruff check .
 
   migrations:
     runs-on: ubuntu-latest
