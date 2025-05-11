@@ -1,3 +1,4 @@
+import aiogram
 from aiogram import Bot
 from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 from aiogram.types import Message
@@ -23,11 +24,18 @@ async def forward_movie_message(bot: Bot, message: Message, cancel_keyboard):
         )
         return False
     else:
-        await bot.forward_message(
-            chat_id=message.chat.id,
-            from_chat_id=MOVIE_CHANNEL_ID,
-            message_id=movie.message_id,
-        )
+        try:
+            await bot.forward_message(
+                chat_id=message.chat.id,
+                from_chat_id=MOVIE_CHANNEL_ID,
+                message_id=movie.message_id,
+            )
+        except aiogram.exceptions.TelegramBadRequest:
+            await message.answer(
+                "❗ Фильма с указанным кодом нет", reply_markup=cancel_keyboard
+            )
+            return False
+
         return True
 
 
