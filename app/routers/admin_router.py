@@ -142,8 +142,12 @@ async def process_code_input_admin(message: Message, state: FSMContext):
     movie_found = await forward_movie_message(
         bot, message, cancel_getting_movie_admin_menu
     )
-    if movie_found:
+    if not movie_found:
+        await state.clear()
         await message.answer("Выберите действие...", reply_markup=base_admin_menu)
+        return
+
+    await message.answer("Выберите действие...", reply_markup=base_admin_menu)
 
 
 class BroadcastState(StatesGroup):
